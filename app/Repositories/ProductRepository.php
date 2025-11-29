@@ -11,6 +11,7 @@ class ProductRepository
     
     public function findById(int $id): Product
     {
+
         return Product::findOrFail($id);
     }
 

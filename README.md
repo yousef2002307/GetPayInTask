@@ -1,5 +1,14 @@
 # GetPayInTask
 
+## ✨ Quick Technical Summary
+
+This project implements a robust product management system with a high-performance inventory reservation mechanism. Key technical achievements include:
+
+- **Product API**: Built using **Repository Pattern** and **API Resources** for clean separation of concerns and consistent responses.
+- **Hold System**: Implemented a temporary stock reservation system (`POST /api/holds`) that immediately locks inventory.
+- **Automated Cleanup**: A scheduled task runs every **5 seconds** to identify expired holds.
+- **High-Performance Queueing**: Uses **Redis queues** with a **chunking strategy** (processing 100 records at a time) to dispatch individual deletion jobs. This ensures scalable, parallel processing of expired holds without memory leaks.
+
 ## What This Project Is About
 
 Hey there! 👋 This is a Laravel-based API project that I built to demonstrate clean coding practices and proper software architecture. The main goal was to create a simple yet professional product management system that follows industry best practices.
@@ -74,6 +83,31 @@ The products table is simple but effective:
 
 I also created a factory and seeder so you can quickly populate the database with test data.
 
+### 5. **The Hold System (Advanced Feature)** ⏳
+
+This is where things get really interesting! I implemented a temporary reservation system (like when you're buying tickets and they are "held" for 5 minutes).
+
+#### How It Works:
+
+1.  **Creating a Hold:**
+    *   Endpoint: `POST /api/holds`
+    *   When you request a hold, the system checks if enough stock is available.
+    *   If yes, it immediately **decrements the product stock** and creates a `Hold` record with an expiration time (2 minutes).
+
+2.  **Automatic Cleanup (The "Magic" Part):**
+    *   I didn't want expired holds to sit there forever blocking stock.
+    *   I set up a **Scheduled Task** (`routes/console.php`) that runs every **5 seconds**.
+    *   This triggers the `CleanupExpiredHoldsJob`.
+
+3.  **Scalable Background Processing:**
+    *   Instead of trying to delete thousands of expired holds in one go (which would crash the server), I used a **Chunking Strategy**.
+    *   The `CleanupExpiredHoldsJob` finds expired holds in batches of 100.
+    *   For *each* expired hold, it dispatches a separate `DeleteExpiredHoldJob` to the queue.
+    *   **Why?** This allows multiple queue workers to process deletions in parallel and prevents memory overflows.
+
+4.  **Stock Restoration:**
+    *   When the `DeleteExpiredHoldJob` runs, it adds the quantity back to the product's stock and deletes the hold record.
+
 ## Why This Approach Matters
 
 You might be thinking, "Wow, that's a lot of files for just fetching a product!" And you're right - it is more files than just slapping a query in the controller. But here's why it's worth it:
@@ -118,6 +152,11 @@ This project reinforced some important lessons:
 - **Laravel 12** - The PHP framework that makes web development enjoyable
 - **MySQL** - For data storage
 - **PHP 8.2+** - With all those nice type hints and modern features
+- **Redis** - For queue processing and caching
+- **Xdebug** - For debugging
+- **log-viewer** - For viewing logs
+-**phpstan/larastan** - For static analysis
+- **Laravel Telescope** - For debugging
 
 ---
 

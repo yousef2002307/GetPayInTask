@@ -27,7 +27,9 @@ class ProductController extends Controller
     public function show(int $id): ProductResource|JsonResponse
     {
         try {
+          
             $product = $this->productRepository->findById($id);
+            //xdebug_break();
             return new ProductResource($product);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             Log::error($e->getMessage());
