@@ -3,7 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-
+use Illuminate\Support\Facades\DB;
 return new class extends Migration
 {
     /**
@@ -18,6 +18,14 @@ return new class extends Migration
             $table->decimal('price', 8, 2);
             $table->timestamps();
         });
+        DB::table('products')->insert([
+            [
+                'stock' => 1055,
+                'price' => 100,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        ]);
     }
  
     public function down(): void

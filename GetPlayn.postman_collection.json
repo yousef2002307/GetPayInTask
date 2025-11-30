@@ -1,0 +1,155 @@
+{
+	"info": {
+		"_postman_id": "833ece49-4fc2-4cbf-80a3-1575c0c52eeb",
+		"name": "GetPlayn",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "27000863",
+		"_collection_link": "https://interstellar-shadow-432683.postman.co/workspace/My-Workspace~386c658d-646a-4f9f-8f17-6866aae5f0c6/collection/27000863-833ece49-4fc2-4cbf-80a3-1575c0c52eeb?action=share&source=collection_link&creator=27000863"
+	},
+	"item": [
+		{
+			"name": "get product by id",
+			"item": [
+				{
+					"name": "get product by id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/api/products/1",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"api",
+								"products",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "add hold",
+			"item": [
+				{
+					"name": "add hold",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"product_id\" : 1,\r\n    \"qty\" : 2\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/api/holds",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"api",
+								"holds"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "make an order",
+			"item": [
+				{
+					"name": "New Request",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n \"hold_id\" : 10\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/api/orders",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"api",
+								"orders"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "payment webhook",
+			"item": [
+				{
+					"name": "New Request",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Idempotency-Key",
+								"value": "10f60c4e-5b44-4d22-93b2-8333c98a34c2",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n   \"order_id\" : 3\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/api/payments/webhook",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"api",
+								"payments",
+								"webhook"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
