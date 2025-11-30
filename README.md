@@ -9,6 +9,7 @@ This project implements a robust product management system with a high-performan
 - **Automated Cleanup**: A scheduled task runs every **5 seconds** to identify expired holds.
 - **High-Performance Queueing**: Uses **Redis queues** with a **chunking strategy** (processing 100 records at a time) to dispatch individual deletion jobs. This ensures scalable, parallel processing of expired holds without memory leaks.
 - **Idempotent Webhooks**: Secure payment webhook handling (`POST /api/payments/webhook`) using **Redis-based locking and caching** to ensure that each payment event is processed exactly once, preventing duplicate transactions.
+- **Smart Caching**: Implemented **Cache-Aside pattern** for product data using Redis. Product details are cached to reduce database load, and the cache is automatically invalidated whenever stock changes (e.g., when a hold is created or released).
 
 ## What This Project Is About
 
@@ -145,6 +146,23 @@ Handling payment callbacks requires extreme reliability. We can't afford to proc
 3.  **Repository Logic:**
     *   Updates the order status to `paid`.
     *   Uses `lockForUpdate()` to ensure no other process is modifying the order simultaneously.
+
+### 8. Smart Caching Strategy 🚀
+
+To ensure high performance under load, we don't just hit the database for every request. We use Redis to cache product data intelligently.
+
+#### How It Works:
+
+1.  **Read Strategy (Cache-Aside):**
+    *   When you request `GET /api/products/{id}`, the controller first checks Redis.
+    *   **Hit:** If the data exists, it's returned immediately (super fast! ⚡).
+    *   **Miss:** If not, we fetch it from the database, store it in Redis for next time, and then return it.
+
+2.  **Write Strategy (Cache Invalidation):**
+    *   Caching is hard because of *stale data*. We solved this by invalidating the cache whenever the data changes.
+    *   **Hold Creation:** When a user reserves a product, the stock goes down. We immediately delete the cached product key.
+    *   **Hold Expiration:** When a hold expires and stock is restored, we delete the cached key again.
+    *   **Result:** The next user to request the product will trigger a fresh database fetch, ensuring they always see the correct stock level.
 
 ## Why This Approach Matters
 

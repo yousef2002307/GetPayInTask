@@ -7,10 +7,16 @@ use App\Models\Product;
 use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
+use App\Services\RedisService;
 
 class HoldRepository
 {
+    protected RedisService $redisService;
   
+    public function __construct(RedisService $redisService)
+    {
+        $this->redisService = $redisService;
+    }
     public function createHold(int $productId, int $qty): ?Hold
     {
         try {
@@ -38,6 +44,7 @@ class HoldRepository
                 ->update([
                     'stock' => DB::raw('stock - ' . $qty)
                 ]);
+            $this->redisService->delete("product_{$product->id}");
             DB::commit();
             
             return $hold;
@@ -77,7 +84,7 @@ class HoldRepository
        $product = Product::findOrFail($theHoldRecord->product_id);
        $product->stock += $theHoldRecord->qty;
        $product->save();
-       
+       $this->redisService->delete("product_{$product->id}");
        $theHoldRecord->update([
            'is_expired' => true,
           
