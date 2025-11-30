@@ -107,11 +107,27 @@ This is where things get really interesting! I implemented a temporary reservati
 3.  **Scalable Background Processing:**
     *   Instead of trying to delete thousands of expired holds in one go (which would crash the server), I used a **Chunking Strategy**.
     *   The `CleanupExpiredHoldsJob` finds expired holds in batches of 100.
-    *   For *each* expired hold, it dispatches a separate `DeleteExpiredHoldJob` to the queue.
-    *   **Why?** This allows multiple queue workers to process deletions in parallel and prevents memory overflows.
+    *   For *each* expired hold, it dispatches a separate `ExpiredHoldJob` to the queue.
+    *   **Why?** This allows multiple queue workers to process expiring holds in parallel and prevents memory overflows.
 
 4.  **Stock Restoration:**
-    *   When the `DeleteExpiredHoldJob` runs, it adds the quantity back to the product's stock and deletes the hold record.
+    *   When the `ExpiredHoldJob` runs, it adds the quantity back to the product's stock and expires the hold record.
+
+### 6. The Order System 📦
+
+Once a user decides to purchase the held product, the order system takes over. This isn't just a simple insert; it's a critical state transition.
+
+#### How It Works:
+
+1.  **Endpoint:** `POST /api/orders`
+2.  **Strict Validation:**
+    *   The system validates that the `hold_id` exists.
+    *   **Custom Rule (`IsHoldExpiredOrUsed`)**: Verifies that the hold hasn't expired AND hasn't been used yet. This prevents double-spending of reservations.
+3.  **Atomic Processing:**
+    *   We use a **Database Transaction** to ensure data integrity.
+    *   **Pessimistic Locking**: We use `lockForUpdate()` on the hold record. This effectively "locks" the row, preventing any other process from modifying it until our transaction completes.
+    *   The hold is marked as `is_used = true`.
+    *   The order is created with a default `payment_status` of `pending`.
 
 ## Why This Approach Matters
 

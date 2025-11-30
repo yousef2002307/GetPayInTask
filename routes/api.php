@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\ProductController\ProductController;
 use App\Http\Controllers\Api\HoldController\HoldController;
+use App\Http\Controllers\Api\OrderController\OrderController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('products')->group(function () {
@@ -12,3 +13,8 @@ Route::prefix('products')->group(function () {
 Route::prefix('holds')->group(function () {
     Route::post('/', [HoldController::class, 'store']);
 });
+
+Route::prefix('orders')->group(function () {
+    Route::post('/', [OrderController::class, 'store']);
+});
+
