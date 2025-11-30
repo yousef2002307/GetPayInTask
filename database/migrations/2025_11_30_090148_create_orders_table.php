@@ -16,7 +16,7 @@ return new class extends Migration
             
             $table->foreignId('hold_id')->constrained()->onDelete('cascade');
             
-            $table->enum('payment_status', ['pending', 'cancelled', 'done'])->default('pending');
+            $table->enum('payment_status', ['pending', 'cancelled', 'paid'])->default('pending');
             
             $table->timestamps();
         });

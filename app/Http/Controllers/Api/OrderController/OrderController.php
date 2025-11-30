@@ -11,9 +11,12 @@ class OrderController extends Controller
     {
         try {
             $orderRepository = new OrderRepository();
-            $orderRepository->store($request->only('hold_id'));
+            $order = $orderRepository->store($request->only('hold_id'));
             return response()->json([
                 'message' => 'Order created successfully',
+                "data" => [
+                    "order_id" => $order['id'],
+                ]
             ], 201);
         } catch (\Exception $e) {
             \Log::error($e->getMessage());
