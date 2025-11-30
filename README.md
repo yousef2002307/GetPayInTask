@@ -25,6 +25,9 @@ A robust, high-performance Laravel API for product management with inventory res
 3.  **Test API:**
     ```bash
     curl http://localhost:8000/api/products/1
+    curl http://localhost:8000/api/holds
+    curl http://localhost:8000/api/orders
+    curl http://localhost:8000/api/payments/webhook
     ```
 
 ---
