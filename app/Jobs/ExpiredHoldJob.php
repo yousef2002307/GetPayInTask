@@ -7,7 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
 
-class DeleteExpiredHoldJob implements ShouldQueue
+class ExpiredHoldJob implements ShouldQueue
 {
     use Queueable;
 
@@ -21,7 +21,7 @@ class DeleteExpiredHoldJob implements ShouldQueue
     public function handle(HoldRepository $holdRepository): void
     {
         try {
-            $holdRepository->deleteExpiredHolds($this->holdId);
+            $holdRepository->ExpiredHolds($this->holdId);
         } catch (\Exception $e) {
             Log::error("Failed to delete expired hold {$this->holdId}: " . $e->getMessage());
         }

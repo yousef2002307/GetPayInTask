@@ -22,10 +22,11 @@ class CleanupExpiredHoldsJob implements ShouldQueue
         $count = 0;
 
         Hold::where('expires_at', '<=', Carbon::now())
+            ->where('is_expired', false)
             ->select('id')
             ->chunk(100, function ($holds) use (&$count) {
                 foreach ($holds as $hold) {
-                    DeleteExpiredHoldJob::dispatch($hold->id);
+                    ExpiredHoldJob::dispatch($hold->id);
                     $count++;
                 }
             });

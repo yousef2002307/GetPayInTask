@@ -15,6 +15,8 @@ class Hold extends Model
         'product_id',
         'qty',
         'expires_at',
+        'is_expired',
+        'is_used',
     ];
 
 

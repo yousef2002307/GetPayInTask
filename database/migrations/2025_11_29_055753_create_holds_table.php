@@ -19,6 +19,8 @@ return new class extends Migration
 
            
             $table->timestamp('expires_at')->index();
+            $table->boolean('is_expired')->default(false);
+            $table->boolean('is_used')->default(false);
 
             $table->timestamps();
         });

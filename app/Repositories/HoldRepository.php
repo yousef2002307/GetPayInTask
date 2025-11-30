@@ -63,7 +63,7 @@ class HoldRepository
     }
 
     
-    public function deleteExpiredHolds($id): int
+    public function ExpiredHolds($id): int
     {
        $theHoldRecord = Hold::where('expires_at', '<=', Carbon::now())
            ->where('id', $id)
@@ -78,7 +78,10 @@ class HoldRepository
        $product->stock += $theHoldRecord->qty;
        $product->save();
        
-       $theHoldRecord->delete();
+       $theHoldRecord->update([
+           'is_expired' => true,
+          
+       ]);
        
        \Log::info('Hold deleted: ' . $id . ', restored ' . $theHoldRecord->qty . ' units to product ' . $product->id);
        return 1;
