@@ -6,45 +6,54 @@ use App\Models\Hold;
 use App\Models\Product;
 use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 
 class HoldRepository
 {
   
     public function createHold(int $productId, int $qty): ?Hold
     {
-        $product = Product::findOrFail($productId);
+        try {
+            DB::beginTransaction();
+            $product = DB::table('products')
+                ->where('id', $productId)
+                ->lockForUpdate()
+                ->first();
 
-      // xdebug_break();
-        $availableStock = $this->getAvailableStock($productId);
-        
-        if ($availableStock < $qty) {
-            return null;
+            $availableStock = $this->getAvailableStock($productId);
+            
+            if ($availableStock < $qty) {
+                DB::rollBack();
+                return null;
+            }
+
+            $hold = Hold::create([
+                'product_id' => $productId,
+                'qty' => $qty,
+                'expires_at' => Carbon::now()->addMinutes(2),
+            ]);
+            
+          DB::table('products')
+                ->where('id', $productId)
+                ->update([
+                    'stock' => DB::raw('stock - ' . $qty)
+                ]);
+            DB::commit();
+            
+            return $hold;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
         }
-
-      
-        $hold = Hold::create([
-            'product_id' => $productId,
-            'qty' => $qty,
-            'expires_at' => Carbon::now()->addMinutes(2),
-        ]);
-        xdebug_break();
-        $product->stock -= $qty;
-        $product->save();
-        $product->refresh();
-//xdebug_break();
-        return $hold;
     }
 
     public function getAvailableStock(int $productId): int
     {
         $product = Product::findOrFail($productId);
         
-       
-        $heldQty = Hold::where('product_id', $productId)
-            ->where('expires_at', '>', Carbon::now())
-            ->sum('qty');
-
-        return $product->stock - $heldQty;
+        // Stock is already decremented when holds are created,
+        // so we return it directly without subtracting held quantities again
+        return $product->stock;
     }
 
 

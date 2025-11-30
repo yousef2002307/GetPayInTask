@@ -5,7 +5,7 @@
 This project implements a robust product management system with a high-performance inventory reservation mechanism. Key technical achievements include:
 
 - **Product API**: Built using **Repository Pattern** and **API Resources** for clean separation of concerns and consistent responses.
-- **Hold System**: Implemented a temporary stock reservation system (`POST /api/holds`) that immediately locks inventory.
+- **Hold System**: Implemented a temporary stock reservation system (`POST /api/holds`) that immediately locks inventory.  uses transcation when updating the stock to avoid race conditions
 - **Automated Cleanup**: A scheduled task runs every **5 seconds** to identify expired holds.
 - **High-Performance Queueing**: Uses **Redis queues** with a **chunking strategy** (processing 100 records at a time) to dispatch individual deletion jobs. This ensures scalable, parallel processing of expired holds without memory leaks.
 
@@ -93,6 +93,11 @@ This is where things get really interesting! I implemented a temporary reservati
     *   Endpoint: `POST /api/holds`
     *   When you request a hold, the system checks if enough stock is available.
     *   If yes, it immediately **decrements the product stock** and creates a `Hold` record with an expiration time (2 minutes).
+    * uses transcation when updating the stock to avoid race conditions
+    * uses lockForUpdate() to avoid race conditions
+    * uses DB::beginTransaction() and DB::commit() to avoid race conditions
+    * check stock quantity before decrementing
+    * if stock is not available, return error message with available stock
 
 2.  **Automatic Cleanup (The "Magic" Part):**
     *   I didn't want expired holds to sit there forever blocking stock.
