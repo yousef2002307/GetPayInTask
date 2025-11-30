@@ -8,6 +8,7 @@ This project implements a robust product management system with a high-performan
 - **Hold System**: Implemented a temporary stock reservation system (`POST /api/holds`) that immediately locks inventory.  uses transcation when updating the stock to avoid race conditions
 - **Automated Cleanup**: A scheduled task runs every **5 seconds** to identify expired holds.
 - **High-Performance Queueing**: Uses **Redis queues** with a **chunking strategy** (processing 100 records at a time) to dispatch individual deletion jobs. This ensures scalable, parallel processing of expired holds without memory leaks.
+- **Idempotent Webhooks**: Secure payment webhook handling (`POST /api/payments/webhook`) using **Redis-based locking and caching** to ensure that each payment event is processed exactly once, preventing duplicate transactions.
 
 ## What This Project Is About
 
@@ -128,6 +129,22 @@ Once a user decides to purchase the held product, the order system takes over. T
     *   **Pessimistic Locking**: We use `lockForUpdate()` on the hold record. This effectively "locks" the row, preventing any other process from modifying it until our transaction completes.
     *   The hold is marked as `is_used = true`.
     *   The order is created with a default `payment_status` of `pending`.
+
+### 7. The Webhook System & Idempotency 🪝
+
+Handling payment callbacks requires extreme reliability. We can't afford to process the same payment twice or miss a status update.
+
+#### How It Works:
+
+1.  **Endpoint:** `POST /api/payments/webhook`
+2.  **Idempotency Middleware (`EnsureIdempotency`):**
+    *   **The Problem:** Payment gateways often retry webhooks if they don't get a quick response. This can lead to double-processing.
+    *   **The Solution:** We require an `Idempotency-Key` header.
+    *   **Locking:** We use `Cache::lock` (Redis) to atomically lock the key. If a second request comes in while the first is processing, it's rejected (409 Conflict).
+    *   **Caching:** Once processed, we cache the *entire response* in Redis. If the gateway retries with the same key, we serve the cached response immediately without touching the database.
+3.  **Repository Logic:**
+    *   Updates the order status to `paid`.
+    *   Uses `lockForUpdate()` to ensure no other process is modifying the order simultaneously.
 
 ## Why This Approach Matters
 
