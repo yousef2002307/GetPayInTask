@@ -42,7 +42,16 @@ class EnsureIdempotency
             'cache_key' => $cacheKey,
             'lock_key' => $lockKey,
         ]);
+ if ($cachedResponse = Redis::get($cacheKey)) {
+                Log::debug('Found cached response after acquiring lock', ['key' => $cacheKey]);
+                $responseData = json_decode($cachedResponse, true);
 
+                return response(
+                    $responseData['data'],
+                    $responseData['status'],
+                    $responseData['headers']
+                );
+            }
         $lock = Cache::lock($lockKey, self::LOCK_TIMEOUT);
 
         if (! $lock->get(1)) {
